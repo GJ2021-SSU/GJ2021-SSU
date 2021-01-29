@@ -1,0 +1,129 @@
+import pygame
+import random
+import Entities
+import Utility
+
+pygame.init()
+
+
+def draw_text(string, x, y):
+    temp_text = font.render(string, False, white)
+    height = temp_text.get_height()
+    window.blit(temp_text, (x, y))
+    return height
+
+
+# MONOLITHIC VARIABLES
+Running = True
+Paused = False
+Debug = False
+Sound = True
+clock = pygame.time.Clock()
+
+# Window Variables
+window_width = 800
+window_height = 600
+window = pygame.display.set_mode((window_width, window_height))
+pygame.display.set_caption('Main.py')
+
+# Player Variables
+player_control = True
+player = Entities.Player(window_width // 2, window_height // 2)
+
+# Room Variables
+new_room = False
+room_count_total = 0
+cur_level = 1
+room_size = 11
+room_model = 0
+room = Utility.create_room(cur_level, room_size, room_model)
+platform_list = room[0]
+door_dict = room[1]
+path = Utility.create_path(0, False, [2, 2])
+cur_step = 0
+
+# Color Variables
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 50, 50)
+green = (50, 255, 50)
+
+# Font Variables
+font = pygame.font.SysFont("Courier New", 16)
+
+# GAME LOOP
+while Running:
+    # UPDATE #
+    delta_time = clock.tick(1000) / 1000
+    event = pygame.event.poll()
+    keys = pygame.key.get_pressed()
+
+    if Paused:
+        delta_time = 0
+
+    # Update the Player
+    player.update(event, keys, delta_time, room)
+
+    # Update the Room
+    platform_list = room[0]
+    door_dict = room[1]
+    for X in door_dict:
+        door_num = X
+        door_rect = door_dict[door_num]
+        if door_rect.colliderect(player.hitbox):
+            if cur_step <= len(path):
+                if door_num != path[cur_level]:
+                    room = Utility.create_room(cur_level, 11, 0)
+                elif door_num == path[cur_level]:
+                    cur_step += 1
+                    room_size = random.choice((11, 12, 21, 22))
+                    room_model = random.randint(1, 5)
+                    room = Utility.create_room(cur_level, room_size, room_model)
+            elif cur_step > len(path):
+                cur_level += 1
+                cur_step = 0
+                room = Utility.create_room(cur_level, 11, 0)
+            if door_num == 2 or door_num == 4:
+                player.y_speed = 0
+                player.x = abs(player.x - window_width)
+            elif door_num == 1 or door_num == 3:
+                player.y_speed = 0
+                player.y = abs(player.y - player.size - window_height)
+
+    # INPUT #
+    if event.type == pygame.QUIT:
+        Running = False
+    elif event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            Running = False
+        elif event.key == pygame.K_o:
+            Debug ^= True
+        elif event.key == pygame.K_p:
+            Paused ^= True
+
+    # DRAW #
+    window.fill(black)
+
+    # Draw the Player
+    # TEMPORARY UNTIL CAMERA
+    player.draw(window, [])
+
+    # Draw the Platforms
+    for p in platform_list:
+        pygame.draw.rect(window, white, p, 0)
+
+    # Draw the Doors
+
+    # Debug
+    if Debug:
+        for p in platform_list:
+            pygame.draw.rect(window, red, p, 0)
+        for d in door_dict:
+            pygame.draw.rect(window, green, door_dict[d], 1)
+
+        text_height = draw_text("Room Type = {0}, {1}, {2}".format(cur_level, room_size, room_model), 0, 0)
+        draw_text("Path = {0}, Step = {1}, Door {2}".format(path, cur_step, path[cur_step]), 0, text_height)
+
+    pygame.display.flip()
+
+pygame.quit()
