@@ -1,0 +1,3 @@
+Utility.py is where the real behind-the-scenes is held.
+
+It holds the code for each room that is not randomized in a create_room function.
