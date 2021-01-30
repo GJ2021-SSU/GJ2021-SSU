@@ -1,0 +1,3 @@
+Entities.py is where the object classes are created to keep the Main page less cluttered.
+
+Objects that move and have seperate individual instances are coded here.
