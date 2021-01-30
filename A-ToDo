@@ -1,2 +1,3 @@
 Just some note to self / others. IDK
 # Reset Player Position # in around line 90, Main, needs some serious work.
+Player.y_acceleration and Player.y_speed could use some touching up in my [JdP] opinion.
